@@ -1,0 +1,23 @@
+services:
+  openclaw-gateway-yt:
+    image: ghcr.io/openclaw/openclaw:latest
+    container_name: openclaw-gateway
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "18789:18789"
+    volumes:
+      - ${OPENCLAW_CONFIG_DIR:-~/.openclawyt}:/home/node/.openclaw
+      - ${OPENCLAW_WORKSPACE_DIR:-~/.openclawyt/workspace}:/home/node/.openclaw/workspace
+
+  openclaw-cli:
+    image: ghcr.io/openclaw/openclaw:latest
+    container_name: openclaw-cli
+    profiles: ["cli"]
+    env_file:
+      - .env
+    volumes:
+      - ${OPENCLAW_CONFIG_DIR:-~/.openclawyt}:/home/node/.openclaw
+      - ${OPENCLAW_WORKSPACE_DIR:-~/.openclawyt/workspace}:/home/node/.openclaw/workspace
+    entrypoint: ["node", "/app/openclaw.mjs"]
