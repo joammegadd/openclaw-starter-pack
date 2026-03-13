@@ -1,0 +1,40 @@
+services:
+  nginx:
+    image: nginx:alpine
+    container_name: openclaw-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    networks:
+      - openclaw-network
+
+  openclaw-gateway-yt:
+    build: .
+    container_name: openclaw-gateway
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "18789:18789"
+    volumes:
+      - ${OPENCLAW_CONFIG_DIR:-~/.openclawyt}:/home/node/.openclaw
+      - ${OPENCLAW_WORKSPACE_DIR:-~/.openclawyt/workspace}:/home/node/.openclaw/workspace
+    networks:
+      - openclaw-network
+
+  openclaw-cli:
+    build: .
+    container_name: openclaw-cli
+    profiles: ["cli"]
+    env_file:
+      - .env
+    volumes:
+      - ${OPENCLAW_CONFIG_DIR:-~/.openclawyt}:/home/node/.openclaw
+      - ${OPENCLAW_WORKSPACE_DIR:-~/.openclawyt/workspace}:/home/node/.openclaw/workspace
+    entrypoint: ["node", "/app/openclaw.mjs"]
+  
+networks:
+  openclaw-network:
+    driver: bridge
