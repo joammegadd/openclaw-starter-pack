@@ -23,9 +23,9 @@ WORKDIR /opt/whisper.cpp
 RUN cmake -B build -DWHISPER_FFMPEG=yes
 RUN cmake --build build --config Release
 
-# RUN mkdir -p /opt/whisper.cpp/models && \
-#     curl -L https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-small.bin \
-#     -o /opt/whisper.cpp/models/ggml-small.bin
+RUN mkdir -p /opt/whisper.cpp/models && \
+    curl -L https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-small.bin \
+    -o /opt/whisper.cpp/models/ggml-small.bin
 
 ENV PATH="/opt/whisper.cpp/build/bin:${PATH}"
 ENV WHISPER_CPP_MODEL="/opt/whisper.cpp/models/ggml-base.bin"
