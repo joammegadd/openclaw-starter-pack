@@ -1,0 +1,70 @@
+services:
+  nginx:
+    image: nginx:alpine
+    container_name: openclaw-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    networks:
+      - openclaw-network
+      
+  ollama:
+    image: ollama/ollama:latest
+    container_name: openclaw-ollama
+    restart: unless-stopped
+    gpus: all
+    ports:
+      - "11434:11434"
+    volumes:
+      -  ${OLLAMA_CONFIG_DIR:-~/.ollama}:/root/.ollama
+    networks:
+      - openclaw-network
+
+  comfyui:
+    image: ghcr.io/lecode-official/comfyui-docker:latest
+    container_name: comfyui
+    restart: unless-stopped
+    ports:
+      - "8188:8188" # UI web padrão do ComfyUI
+    environment:
+      - CLI_ARGS=--listen 0.0.0.0 --port 8188
+    volumes:
+      - ./comfyui/models:/opt/comfyui/models
+      - ./comfyui/output:/opt/comfyui/output
+      - ./comfyui/input:/opt/comfyui/input
+      - ./comfyui/custom_nodes:/opt/comfyui/custom_nodes
+    networks:
+      - openclaw-network
+    gpus: all
+
+  openclaw-gateway-yt:
+    build: .
+    container_name: openclaw-gateway
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "18789:18789"
+    volumes:
+      - ${OPENCLAW_CONFIG_DIR:-~/.openclawyt}:/home/node/.openclaw
+      - ${OPENCLAW_WORKSPACE_DIR:-~/.openclawyt/workspace}:/home/node/.openclaw/workspace
+      - ${WHISPER_MODEL_DIR:-~/.openclawyt/whisper-models}:/opt/whisper.cpp/models
+    networks:
+      - openclaw-network
+
+  openclaw-cli:
+    build: .
+    container_name: openclaw-cli
+    profiles: ["cli"]
+    env_file:
+      - .env
+    volumes:
+      - ${OPENCLAW_CONFIG_DIR:-~/.openclawyt}:/home/node/.openclaw
+      - ${OPENCLAW_WORKSPACE_DIR:-~/.openclawyt/workspace}:/home/node/.openclaw/workspace
+    entrypoint: ["node", "/app/openclaw.mjs"]
+  
+networks:
+  openclaw-network:
+    driver: bridge
